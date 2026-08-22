@@ -1,0 +1,10 @@
+# Every change is reviewed by the repository owner.
+*       @Chrisb1368
+
+# Anything touching permissions, data handling, or the store listing
+# gets extra attention — these files are what the Chrome Web Store
+# review process reads.
+/manifest.json          @Chrisb1368
+/PRIVACY.md             @Chrisb1368
+/SECURITY.md            @Chrisb1368
+/docs/STORE_LISTING.md  @Chrisb1368

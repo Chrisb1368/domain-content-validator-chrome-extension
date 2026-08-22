@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Manifest and policy checks
+        run: node .github/scripts/validate.mjs
+
+      - name: JavaScript parses
+        run: |
+          set -e
+          for f in $(git ls-files '*.js' '*.mjs'); do
+            node --check "$f"
+            echo "ok  $f"
+          done
+
+      - name: Package builds with manifest.json at the archive root
+        run: |
+          set -e
+          zip -qr /tmp/dcv.zip . -x '.git/*' '.github/*' 'docs/*' '*.md' '.gitignore' '.DS_Store'
+          unzip -l /tmp/dcv.zip
+          unzip -l /tmp/dcv.zip | grep -qE ' manifest\.json$' || {
+            echo 'manifest.json is not at the archive root'
+            exit 1
+          }
+          echo "package OK ($(du -h /tmp/dcv.zip | cut -f1))"

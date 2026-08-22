@@ -1,0 +1,39 @@
+body {
+	block-size: max-content;
+	inline-size: 300px;
+
+	border: none;
+	outline: none;
+
+	background: whitesmoke;
+}
+
+svg {
+	flex-shrink: 0;
+
+	inline-size: max-content;
+}
+
+.hidden {
+	display: none !important;
+}
+
+.box {
+	display: flex;
+	gap: 10px;
+
+	background: rgba(255, 255, 255, .9);
+
+	border-radius: 7px;
+	padding: 10px;
+}
+
+.dialog-box {
+	align-items: center;
+}
+
+.info-box {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}

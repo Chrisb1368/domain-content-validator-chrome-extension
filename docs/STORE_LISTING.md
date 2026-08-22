@@ -26,7 +26,7 @@ this file in the same pull request so the repository and the store never drift.
 | Rating | 5.0 ★ (1 rating) |
 | Users | 8 |
 | Trader status | Non-trader — "This developer has not identified itself as a trader. For consumers in the European Union, please note that consumer rights do not apply to contracts between you and this developer." |
-| Privacy policy | https://www.timemotionstudy.com/private-policy |
+| Privacy policy | ⚠️ None that covers this extension — the listing field must be corrected, see below |
 
 ---
 
@@ -122,5 +122,5 @@ scheduled for removal — see [../PRIVACY.md](../PRIVACY.md).
 - [ ] Screenshots show the current UI
 - [ ] Permission justifications match `manifest.json` exactly
 - [ ] Privacy disclosures still true after the code change
-- [ ] Privacy policy URL resolves
+- [ ] Privacy policy field points at a policy that actually covers this extension
 - [ ] This file updated in the same pull request

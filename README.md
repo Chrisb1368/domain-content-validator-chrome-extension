@@ -1,14 +1,20 @@
-# Domain-Content Validator
+# Domain-Content Validator (DCV)
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-live-4285F4?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/domain-content-validator/jagbdijnbgbohlggdnacpdlbnmmplkpl)
-[![Version](https://img.shields.io/badge/version-0.0.1-blue)](#release-history)
+[![Version](https://img.shields.io/badge/version-0.0.1-blue)](CHANGELOG.md)
 [![Manifest](https://img.shields.io/badge/manifest-v3-success)](#manifest--permissions)
 [![Category](https://img.shields.io/badge/category-Privacy%20%26%20Security-8A2BE2)](https://chromewebstore.google.com/category/extensions/privacy)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
-A Chrome extension that flags phishing and fraudulent email by checking whether **who a message claims to be from** actually matches **what the message says**.
+**Protect yourself from email scams.** DCV checks whether the domain an email
+comes *from* actually appears in what the email *says* — and warns you when it
+doesn't.
 
-> **Install from the Chrome Web Store →** [Domain-Content Validator](https://chromewebstore.google.com/detail/domain-content-validator/jagbdijnbgbohlggdnacpdlbnmmplkpl)
+<p align="center">
+  <img src="docs/assets/store-promo.jpg" alt="Domain-Content Validator" width="420">
+</p>
+
+> **Install →** [Domain-Content Validator on the Chrome Web Store](https://chromewebstore.google.com/detail/domain-content-validator/jagbdijnbgbohlggdnacpdlbnmmplkpl)
 
 ---
 
@@ -18,101 +24,130 @@ A Chrome extension that flags phishing and fraudulent email by checking whether 
 - [Features](#features)
 - [How it works](#how-it-works)
 - [Installation](#installation)
-- [Repository status](#repository-status)
 - [Project structure](#project-structure)
-- [Development](#development)
 - [Manifest & permissions](#manifest--permissions)
 - [Architecture](#architecture)
+- [Development](#development)
+- [Known limitations & cleanup backlog](#known-limitations--cleanup-backlog)
+- [Roadmap](#roadmap)
 - [Privacy & data handling](#privacy--data-handling)
 - [Release & publishing](#release--publishing)
 - [Contributing](#contributing)
-- [Roadmap](#roadmap)
 - [Release history](#release-history)
 - [Support](#support)
 - [Maintainers](#maintainers)
 - [License](#license)
+- [Further reading](#further-reading)
 
 ---
 
 ## Overview
 
-Most phishing defenses look at one signal at a time: a bad link, a spoofed display name, a failed SPF record. Domain-Content Validator looks at the **relationship between two signals** — the sending domain and the body of the message — and raises a flag when they disagree.
+Phishing attacks and fraudulent emails are on the rise, and scammers routinely
+use mismatched domains and content to deceive people. DCV adds a layer of
+defense that most filters skip: it compares **who the message claims to be
+from** against **what the message actually says**.
 
-A message that claims to be a password reset from your bank but arrives from a lookalike or unrelated domain is a mismatch. So is an invoice from a domain that has nothing to do with the vendor named in the body. Those inconsistencies are what the extension surfaces, in real time, as you read your mail.
+If a message arrives from `secure-billing-update.example` but the body is all
+about your bank, the sending domain never appears in the content. That
+disagreement is the signal DCV looks for, and it surfaces it while you are
+reading the message — not in a report you check later.
 
-Analysis happens locally in the browser. Message content is not stored and is not transmitted to any external service.
+Everything runs in the browser. No email content is stored or sent anywhere.
 
 **At a glance**
 
 | | |
 |---|---|
-| **Name** | Domain-Content Validator |
+| **Name** | Domain-Content Validator (DCV) |
 | **Extension ID** | `jagbdijnbgbohlggdnacpdlbnmmplkpl` |
-| **Current published version** | 0.0.1 |
+| **Published version** | 0.0.1 (October 4, 2023) |
 | **Manifest version** | 3 |
+| **Supported client** | Gmail on the web (`mail.google.com`) |
 | **Store category** | Privacy & Security |
 | **Languages** | English (United States) |
 | **Package size** | ~1.48 MiB |
-| **Store rating** | 5.0 ★ |
+| **Rating** | 5.0 ★ |
 | **Privacy policy** | https://www.timemotionstudy.com/private-policy |
 
 ---
 
 ## Features
 
-### Domain–body correlation analysis
-The core check. The extension extracts the sender's domain and the entities, brands, and claims referenced in the message body, then scores how well the two agree. Low agreement is what drives an alert.
+### Domain–body correlation analysis *(current)*
 
-### Real-time alerts
-Warnings appear while the message is open, inline and in context — not in a report you read later. Each alert includes a short explanation of *why* the message was flagged, so the warning is actionable rather than just alarming.
+Cross-checks the content of the email with the domain of the sender to identify
+potential inconsistencies or red flags. DCV pulls the sender's domain out of the
+Gmail header, then searches the message body for that domain name. A body that
+never mentions the domain it came from is the red flag.
 
-### Content authenticity checks
-Beyond the domain comparison, the message body is scanned for the patterns that consistently accompany fraudulent mail: urgency and threat language, credential and payment requests, mismatched or obfuscated link targets, and lookalike domain spellings.
+### Real-time alerts *(current)*
 
-### Privacy-preserving by design
-All evaluation runs client-side. Nothing about the messages you read is stored externally or shared with third parties.
+Notifies you immediately when a suspicious email is detected, so you can act
+before you click anything. The warning explains *why* the message was flagged,
+and the toolbar popup keeps the verdict for the message you are reading:
+
+| Popup state | When it shows | Message |
+|---|---|---|
+| ❌ **Potential Fraud Alert!** | Sender domain does not appear in the body | "The sender's domain and the email content have inconsistencies. Be cautious before interacting with this email or its content." |
+| ✅ **Safe Email Detected** | Sender domain appears in the body | "The sender's domain and the email content show no suspicious correlation. It appears genuine at a first glance. Always remain cautious!" |
+| ✅ **No Email Detected** | Not looking at an open message | "You can browse freely, a notification popup will appear if something suspicious is detected." |
+
+### Privacy-preserving by design *(current)*
+
+All processing happens client-side. No email content is stored or shared
+externally — see [PRIVACY.md](PRIVACY.md) for exactly what is and is not kept.
 
 ---
 
 ## How it works
 
 ```
- Message opens in a supported webmail client
+ User opens a message in Gmail
               │
               ▼
- ┌────────────────────────────┐
- │ Content script             │  Reads sender + body from the DOM
- │ (src/content)              │  Never leaves the page
- └────────────┬───────────────┘
-              │  structured payload (sender, subject, body, links)
-              ▼
- ┌────────────────────────────┐
- │ Service worker             │  Orchestrates analysis, caches verdicts
- │ (src/background)           │
- └────────────┬───────────────┘
-              │
-              ▼
- ┌────────────────────────────┐
- │ Analyzer                   │  1. Normalize + parse sender domain
- │ (src/lib/analyzer.js)      │  2. Extract entities/claims from body
- │                            │  3. Score domain ↔ content correlation
- │                            │  4. Apply heuristic risk signals
- │                            │  5. Emit verdict + reasons
- └────────────┬───────────────┘
-              │  { risk, score, reasons[] }
-              ▼
- ┌────────────────────────────┐
- │ Alert banner + popup       │  Inline warning, with explanation
- └────────────────────────────┘
+ ┌────────────────────────────────┐
+ │ background.js                  │  chrome.tabs.onUpdated / onActivated
+ │ (service worker)               │  → sends { exe: true } to the tab
+ └───────────────┬────────────────┘
+                 │
+                 ▼
+ ┌────────────────────────────────┐
+ │ content.js                     │  Polls every 2s until the page has
+ │ (runs inside the Gmail page)   │  rendered (> 1000 chars of text)
+ └───────────────┬────────────────┘
+                 │
+                 ▼
+ ┌────────────────────────────────┐
+ │ validate(url)                  │  1. Is this an open Gmail message?
+ │                                │  2. Read sender from  .go
+ │                                │  3. Read body from    .a3s
+ │                                │  4. Does the body mention the domain?
+ └───────────────┬────────────────┘
+                 │  "sus" | "not" | false
+                 ├──────────────────────────────► alert() if "sus"
+                 ▼
+ ┌────────────────────────────────┐
+ │ chrome.storage.session         │  { suspicious, urlPath }
+ └───────────────┬────────────────┘
+                 │  storage.onChanged
+                 ▼
+ ┌────────────────────────────────┐
+ │ popup/                         │  Renders the verdict with an icon,
+ │ (toolbar popup)                │  heading, and explanation
+ └────────────────────────────────┘
 ```
 
-**Risk levels**
+**Verdict values**
 
-| Level | Meaning | Behavior |
-|---|---|---|
-| `safe` | Domain and content agree; no notable risk signals | No banner |
-| `caution` | Weak correlation, or one or more soft signals present | Yellow banner, dismissible |
-| `danger` | Strong mismatch, or multiple high-confidence signals | Red banner with reason list |
+| Value | Meaning |
+|---|---|
+| `"sus"` | Suspicious — the sender's domain never appears in the message body, or the sender element could not be found |
+| `"not"` | The domain appears at least once in the body |
+| `false` | Not an open Gmail message; nothing to evaluate |
+
+The step-by-step detection logic, including every edge case and its known
+weaknesses, is documented in [docs/DETECTION.md](docs/DETECTION.md).
 
 ---
 
@@ -122,7 +157,7 @@ All evaluation runs client-side. Nothing about the messages you read is stored e
 
 1. Open the [store listing](https://chromewebstore.google.com/detail/domain-content-validator/jagbdijnbgbohlggdnacpdlbnmmplkpl).
 2. Click **Add to Chrome**, then **Add extension**.
-3. Open your webmail and read a message — the extension activates automatically.
+3. Open Gmail and read a message — DCV runs automatically.
 
 ### From source (development build)
 
@@ -135,33 +170,13 @@ Then in Chrome:
 
 1. Go to `chrome://extensions`.
 2. Turn on **Developer mode** (top right).
-3. Click **Load unpacked** and select the repository folder (the one containing `manifest.json`).
-4. The extension appears in the toolbar. Pin it for easier access.
+3. Click **Load unpacked** and select the repository folder — the one containing
+   `manifest.json`.
+4. Pin the extension so the popup is one click away.
 
-> Icons are not committed yet. If Chrome reports a manifest error about missing icons, add PNGs under `assets/icons/` and reference them from `manifest.json` — see [Manifest & permissions](#manifest--permissions).
-
----
-
-## Repository status
-
-**This repository currently contains documentation and a Manifest V3 scaffold — not the shipped v0.0.1 source.**
-
-The scaffold exists so the project structure, build conventions, and module boundaries are settled before code lands. The next step is for the production source of the published extension to be pushed here.
-
-Recommended first push:
-
-```bash
-git clone https://github.com/Chrisb1368/domain-content-validator-chrome-extension.git
-cd domain-content-validator-chrome-extension
-git checkout -b import/v0.0.1-source
-# copy the shipped extension source into the working tree,
-# reconciling it against the scaffold's layout where it makes sense
-git add -A
-git commit -m "chore: import shipped v0.0.1 extension source"
-git push -u origin import/v0.0.1-source
-```
-
-Open a pull request against `main` so the import can be reviewed before it replaces the scaffold. Where the shipped source and the scaffold disagree on structure, **the shipped source wins** — update this README to match rather than reshaping working code.
+> **⚠️ Before this loads, add `assets/logo1.png`.** `manifest.json` references it
+> for every icon size, and Chrome refuses to load an unpacked extension whose
+> icon files are missing. See [assets/README.md](assets/README.md).
 
 ---
 
@@ -169,29 +184,109 @@ Open a pull request against `main` so the import can be reviewed before it repla
 
 ```
 domain-content-validator-chrome-extension/
-├── manifest.json              # MV3 manifest: permissions, entry points, matches
-├── src/
-│   ├── background/
-│   │   └── service-worker.js  # Event router, verdict cache, badge state
-│   ├── content/
-│   │   └── content-script.js  # DOM extraction + inline alert banner
-│   ├── lib/
-│   │   └── analyzer.js        # Pure analysis logic (no DOM, no chrome.* APIs)
-│   └── popup/
-│       ├── popup.html         # Toolbar popup markup
-│       └── popup.js           # Popup state + settings wiring
+├── manifest.json           # MV3 manifest: entry points, permissions, matches
+├── background.js           # Service worker: tab events + session state
+├── content.js              # Injected into pages: detection + alert
+├── popup/
+│   ├── index.html          # Toolbar popup markup
+│   ├── script.js           # Reads the stored verdict, renders the card
+│   └── style.css           # Popup styling (300px wide)
 ├── assets/
-│   └── icons/                 # 16/32/48/128 px extension icons (to be added)
+│   └── logo1.png           # Extension icon — REQUIRED, not yet committed
+├── docs/
+│   ├── ARCHITECTURE.md     # Module responsibilities and message flow
+│   ├── DETECTION.md        # The heuristic, line by line, with its limits
+│   ├── RELEASING.md        # Packaging and store submission runbook
+│   ├── STORE_LISTING.md    # Version-controlled copy of the store listing
+│   └── assets/             # Images used by the docs
+├── .github/                # PR/issue templates, CODEOWNERS, CI
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── PRIVACY.md
+├── SECURITY.md
 ├── LICENSE
 └── README.md
 ```
 
-**Layout rules**
+The layout is flat on purpose: `manifest.json` sits at the repository root so
+the repo folder can be loaded unpacked and zipped for the store without a build
+step. Keep it that way — see [docs/RELEASING.md](docs/RELEASING.md).
 
-- `src/lib/` stays free of `chrome.*` APIs and DOM access. It is pure, testable logic.
-- `src/content/` is the only place that touches page DOM.
-- `src/background/` is the only place that owns persistent state.
-- Anything shared between contexts goes through `chrome.runtime` messaging, never globals.
+---
+
+## Manifest & permissions
+
+```jsonc
+{
+  "manifest_version": 3,
+  "permissions": ["tabs", "storage"],
+  "background":      { "service_worker": "background.js" },
+  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["content.js"] }],
+  "action":          { "default_popup": "./popup/index.html" }
+}
+```
+
+| Permission | What the code actually uses it for |
+|---|---|
+| `tabs` | `chrome.tabs.onUpdated` reads `tab.url` to decide whether the open message changed, and `chrome.tabs.sendMessage` wakes the content script. Reading `tab.url` is what requires this permission. |
+| `storage` | `chrome.storage.session` holds the current verdict so the popup can render it. Session storage is cleared when the browser closes. |
+| `<all_urls>` (content script matches) | Currently the content script is injected everywhere, then exits immediately on non-Gmail pages. **This is broader than the feature needs** — see the cleanup backlog below. |
+
+There is no `host_permissions` key, no network permission, and no
+`webRequest`/`cookies`/`history` access.
+
+---
+
+## Architecture
+
+### `background.js` — service worker
+
+Owns two things: waking the content script, and holding the verdict.
+
+- **`chrome.runtime.onMessage`** — when the content script reports a result
+  (`{ save: true, suspicious, path }`), writes `{ suspicious, urlPath }` into
+  `chrome.storage.session`.
+- **`chrome.tabs.onUpdated`** — waits for `status === "complete"`, then compares
+  the tab URL against the stored `urlPath`. If the user has navigated to a
+  different message, it sends `{ exe: true }` to re-run detection.
+- **`chrome.tabs.onActivated`** — sends `{ exe: true }` when the user switches
+  tabs, so returning to a Gmail tab re-evaluates the open message.
+
+Because MV3 service workers are torn down when idle, all state that must outlive
+a run goes to `chrome.storage.session` — never to a module-level variable.
+
+### `content.js` — page context
+
+The only code with DOM access.
+
+- Listens for `{ exe: true }`, then polls every 2 seconds until the page has
+  rendered (`document.body.textContent.length > 1000`). Gmail is a single-page
+  app, so the DOM is usually not ready when the tab reports "complete".
+- `validate(url)` performs the check and returns `"sus"`, `"not"`, or `false`.
+- On `"sus"`, raises a native `alert()` with the warning text and reports the
+  verdict to the background worker.
+
+### `popup/` — toolbar UI
+
+Purely a view. `script.js` reads `suspicious` out of `chrome.storage.session`,
+picks one of three icon/heading/message triples, and writes them into the
+markup. It re-renders on `chrome.storage.onChanged`, so the popup updates live
+while it is open. It never analyzes anything itself.
+
+### Message contract
+
+```js
+// content.js → background.js
+{ save: true, suspicious: "sus" | "not" | false, path: "<gmail message id>" }
+
+// background.js → content.js
+{ exe: true }
+
+// background.js → chrome.storage.session
+{ suspicious: "sus" | "not" | false, urlPath: "<gmail message id>" }
+```
+
+More detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -201,152 +296,155 @@ domain-content-validator-chrome-extension/
 
 - Google Chrome 102 or later (Manifest V3 service workers)
 - Git
-- A text editor. No build step, bundler, or `node_modules` is required for the current scaffold — the extension loads as plain ES modules.
+- A text editor
+
+There is no build step, no bundler, and no `node_modules`. The extension ships
+exactly the files in this repository.
 
 ### Everyday loop
 
 1. Load the folder unpacked (see [Installation](#installation)).
 2. Edit files.
-3. Return to `chrome://extensions` and click the **reload** icon on the extension card.
-4. Reload the webmail tab for content-script changes to take effect.
+3. Go to `chrome://extensions` and click **reload** on the DCV card.
+4. Reload the Gmail tab — content scripts are only injected on page load.
 
 ### Debugging
 
 | What | Where |
 |---|---|
-| Service worker logs | `chrome://extensions` → **Service worker** link on the extension card |
-| Content script logs | Page DevTools console, on the webmail tab |
+| Service worker logs | `chrome://extensions` → **Service worker** link on the DCV card |
+| Content script logs | Gmail tab → DevTools console |
 | Popup logs | Right-click the toolbar icon → **Inspect popup** |
-| Stored state | DevTools → Application → Storage → Extension storage |
+| Session storage | Service worker DevTools → Application → Storage → Extension storage → Session |
 | Manifest errors | `chrome://extensions` → **Errors** button on the card |
 
-### Conventions
+### Testing a detection change
 
-- ES modules (`import`/`export`), no transpilation.
-- 2-space indentation, semicolons, single quotes.
-- Message-passing payloads are plain JSON-serializable objects with a `type` field.
-- Anything user-visible is a string constant near the top of its module, not inline.
+Gmail's class names are obfuscated and change without notice, so verify against
+real mail rather than a fixture:
 
----
-
-## Manifest & permissions
-
-The extension is Manifest V3. Every permission is requested for a specific, narrow reason — keep it that way, since the Web Store review process asks you to justify each one.
-
-| Permission | Why it is needed |
-|---|---|
-| `storage` | Persist user preferences (enabled state, alert sensitivity, dismissed warnings) locally. |
-| `activeTab` | Read the currently open message only when the user is actually viewing it. |
-| Host permissions (webmail origins) | Inject the content script into supported mail clients so message content can be read in the page. |
-
-**Supported hosts (scaffold defaults)**
-
-```
-https://mail.google.com/*
-https://outlook.live.com/*
-https://outlook.office.com/*
-https://outlook.office365.com/*
-https://mail.yahoo.com/*
-```
-
-Adding a host requires: a new entry in `content_scripts.matches`, a matching selector set in the content script's DOM adapter, and a Web Store review note explaining the addition.
-
-**Icons.** Add `assets/icons/icon16.png`, `icon32.png`, `icon48.png`, and `icon128.png`, then wire them into `manifest.json` under both `icons` and `action.default_icon`. The 128 px icon is what the Web Store listing uses.
+1. Open a legitimate message whose sender domain appears in the body (a receipt,
+   a newsletter) — expect **Safe Email Detected**.
+2. Open a message from a domain that is never mentioned in the body — expect the
+   alert and **Potential Fraud Alert!**.
+3. Open the inbox list with no message selected — expect **No Email Detected**.
+4. Switch to another tab and back — the verdict should re-evaluate.
+5. Open a non-Gmail page — nothing should happen and no alert should fire.
 
 ---
 
-## Architecture
+## Known limitations & cleanup backlog
 
-### Content script — `src/content/content-script.js`
-Watches the message pane with a `MutationObserver`, and when a message opens, extracts the sender address, subject, visible body text, and every link's display text and real `href`. Extraction is isolated behind a per-provider adapter so supporting a new webmail client means adding selectors, not rewriting logic. It also renders the inline alert banner and reports dismissals back to the service worker.
+Written down deliberately: these are real properties of the shipped 0.0.1 code,
+and each one is a concrete task rather than a vague "improve detection".
 
-### Service worker — `src/background/service-worker.js`
-The coordinator. It receives extracted messages, calls the analyzer, caches verdicts by message fingerprint so re-opening a message is instant, updates the toolbar badge, and serves the popup's requests for current state. It holds no DOM references and does no parsing itself.
+**Detection**
 
-### Analyzer — `src/lib/analyzer.js`
-Pure functions. Given a message payload, it returns `{ risk, score, reasons }`. Because it has no browser dependencies, it can be unit-tested directly in Node and reasoned about without loading the extension. New detection heuristics belong here, each as a small named function that contributes one scored signal.
+1. **Gmail only.** `validate()` returns early unless the URL starts with
+   `https://mail.google.com/`. Every other client is unprotected.
+2. **Brittle selectors.** The sender comes from `.go` and the body from `.a3s` —
+   obfuscated Gmail class names that can change at any time. When they do, DCV
+   silently degrades: a missing `.go` returns `"sus"`, so *every* message starts
+   getting flagged.
+3. **Substring matching is coarse.** The domain's first label is matched
+   case-insensitively anywhere in the body HTML, including inside URLs,
+   attributes, and unrelated words. `paypal.com` matches any body containing
+   "paypal" — which a phisher will happily include.
+4. **One mention is enough.** A single occurrence flips the verdict to safe, so
+   the check is easy to defeat on purpose.
+5. **Unescaped regex.** `new RegExp(domain, "gi")` is built from text taken out
+   of the page. A domain containing regex metacharacters produces a wrong
+   pattern or throws.
+6. **`url.split("#")[1]` throws** when a `mail.google.com` URL has no fragment.
+7. **No signal beyond the domain.** Urgency language, credential requests, and
+   links whose display text disagrees with their target are not considered.
 
-### Popup — `src/popup/`
-Shows the verdict for the message currently in view, the reasons behind it, and the extension's settings. It never analyzes anything itself; it asks the service worker.
+**Permissions and packaging**
 
-### Message contract
+8. **`<all_urls>` is too broad.** The content script only does work on Gmail, so
+   `matches` should be narrowed to `https://mail.google.com/*`. This reduces
+   review friction and the permission warning users see at install.
+9. **`background.matches` is not a valid key.** MV3 ignores it; it should be
+   removed.
+10. **`assets/logo1.png` is not in the repository.** It must be added before the
+    extension can be loaded or packaged.
 
-```js
-// content → background
-{ type: 'ANALYZE_MESSAGE', payload: { sender, subject, body, links, fingerprint } }
+**UI**
 
-// background → content
-{ type: 'VERDICT', payload: { risk, score, reasons, fingerprint } }
-
-// popup → background
-{ type: 'GET_STATE' } | { type: 'SET_SETTING', payload: { key, value } }
-```
-
----
-
-## Privacy & data handling
-
-The extension's value depends on being trustworthy with the mail it reads. The rules are not negotiable:
-
-- **Local-only analysis.** Message content is evaluated in the browser. It is never sent to a server.
-- **No external storage.** Message bodies, senders, and subjects are not persisted. Only verdict fingerprints (non-reversible hashes) and user settings are stored, via `chrome.storage.local`.
-- **No third-party sharing or sale of data.**
-- **No use unrelated to the core function.** No advertising, profiling, or creditworthiness determination.
-- **No remotely hosted code**, as required by Manifest V3.
-
-These match the disclosures on the Web Store listing. Any pull request that adds a network call, an analytics SDK, or a new storage key holding message content changes the extension's privacy posture and **must** be raised with the owner before it is merged — it also requires updating the store's data-safety declarations and the [privacy policy](https://www.timemotionstudy.com/private-policy).
-
----
-
-## Release & publishing
-
-1. **Bump the version** in `manifest.json`. Chrome requires a strictly higher version than the one currently published; the store rejects re-uploads at the same version.
-2. **Test the unpacked build** against every supported webmail host.
-3. **Tag the release**: `git tag v0.0.2 && git push --tags`.
-4. **Package**: zip the contents of the repository root — the archive must contain `manifest.json` at its top level, not a nested folder.
-   ```bash
-   zip -r ../dcv-0.0.2.zip . -x '.git/*' '.github/*' '*.md' '.gitignore' '.DS_Store'
-   ```
-5. **Upload** in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) under the existing item (`jagbdijnbgbohlggdnacpdlbnmmplkpl`) — always update the existing item so current users receive it as an upgrade.
-6. **Update the listing** if features changed: description, screenshots, and the permission justifications.
-7. **Submit for review.** Review typically takes a few days; permission changes take longer.
-
----
-
-## Contributing
-
-External contributions are not being accepted — this is a proprietary codebase. For the working team:
-
-**Branches**
-
-- `main` is protected and always reflects what could ship.
-- Work on `feat/<short-name>`, `fix/<short-name>`, or `chore/<short-name>`.
-
-**Commits** follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`.
-
-**Pull requests** should state what changed and why, list the webmail clients tested against, include before/after screenshots for anything user-visible, and call out any change to permissions, storage, or network behavior explicitly in the description.
-
-**Before opening a PR**
-
-- [ ] Loads unpacked with no console errors and no manifest warnings
-- [ ] Tested on every host in `content_scripts.matches`
-- [ ] No new permissions without a written justification
-- [ ] No message content added to storage or to any network request
-- [ ] README updated if behavior, structure, or permissions changed
+11. **`alert()` blocks the page**, cannot be styled, and is easy to dismiss
+    reflexively. An injected inline banner would be both safer and clearer.
+12. **Leftover boilerplate in the popup.** `popup/index.html` still carries
+    `<title>Controller Mapper</title>` and a "Map keyboard/mouse keys to the
+    controller" meta description from another project.
+13. **A remote font is loaded.** The popup links Google Fonts, which makes a
+    network request to `fonts.googleapis.com` whenever it opens. Self-host or
+    drop it — the extension advertises that it collects no data, and an outbound
+    request undercuts that claim even though no message content is involved.
+14. **Dead code.** `popup/script.js` still contains `getTabURL()` and a copy of
+    `validate()` that run against the popup's own DOM and can never succeed.
 
 ---
 
 ## Roadmap
 
-- [ ] Import the shipped v0.0.1 source into this repository
-- [ ] Add extension icons and commit them under `assets/icons/`
-- [ ] Unit tests for `src/lib/analyzer.js`
-- [ ] Options page for alert sensitivity and per-domain allowlisting
-- [ ] Lookalike-domain detection (homoglyph and edit-distance checks against a known-brand list)
-- [ ] Link target vs. display text mismatch scoring
-- [ ] Additional webmail adapters (Proton Mail, Zoho, Fastmail)
+- [ ] Add `assets/logo1.png` so the repository is loadable and packageable
+- [ ] Narrow `content_scripts.matches` to `https://mail.google.com/*`
+- [ ] Remove the invalid `background.matches` key and the dead popup code
+- [ ] Fix the popup title and meta description
+- [ ] Self-host or remove the Google Fonts dependency
+- [ ] Escape the domain before building the detection regex; guard the hash split
+- [ ] Replace `alert()` with an inline, dismissible banner in the message pane
+- [ ] Score matches instead of using a single boolean (occurrence count, position, link targets)
+- [ ] Lookalike-domain detection: homoglyph and edit-distance checks against a known-brand list
+- [ ] Flag links whose display text and real target disagree
+- [ ] Additional clients: Outlook Web, Yahoo Mail, Proton Mail
+- [ ] Options page: sensitivity, per-domain allowlist, enable/disable
+- [ ] Extract detection into a pure module with unit tests
 - [ ] Localization beyond en-US
-- [ ] CI: lint and manifest validation on pull requests
+
+---
+
+## Privacy & data handling
+
+- **Local-only analysis.** Message content is read from the page and evaluated in
+  the browser. It is never sent to a server; the extension makes no API calls.
+- **Nothing durable is written.** The only stored values are `suspicious` (a
+  three-state verdict) and `urlPath` (the Gmail message id from the URL
+  fragment), both in `chrome.storage.session`, which Chrome clears when the
+  browser closes.
+- **No message content is stored.** Subjects, bodies, and sender addresses are
+  used in memory and discarded.
+- **No third-party sharing or sale of data.**
+- **No analytics, telemetry, or crash reporting.**
+
+The full policy, including the changes that would require re-declaring data
+practices on the store, is in [PRIVACY.md](PRIVACY.md). The published policy
+lives at https://www.timemotionstudy.com/private-policy.
+
+---
+
+## Release & publishing
+
+Short version: bump `version` in `manifest.json`, zip the repository root so
+`manifest.json` sits at the top of the archive, and upload it to the existing
+store item so current users get it as an upgrade.
+
+```bash
+zip -r ../dcv-0.0.2.zip . \
+  -x '.git/*' '.github/*' 'docs/*' '*.md' '.gitignore' '.DS_Store'
+```
+
+The full runbook — version rules, review expectations, what to update on the
+listing — is in [docs/RELEASING.md](docs/RELEASING.md).
+
+---
+
+## Contributing
+
+This is a proprietary codebase and external contributions are not accepted. For
+the working team, [CONTRIBUTING.md](CONTRIBUTING.md) covers branch naming,
+commit conventions, the pull request checklist, and the rules that protect the
+extension's privacy posture.
 
 ---
 
@@ -356,11 +454,14 @@ External contributions are not being accepted — this is a proprietary codebase
 |---|---|---|
 | 0.0.1 | October 4, 2023 | Initial Chrome Web Store release. Domain–body correlation analysis and real-time alerts. |
 
+Full detail in [CHANGELOG.md](CHANGELOG.md).
+
 ---
 
 ## Support
 
 - **Bugs and feature requests:** open an [issue](https://github.com/Chrisb1368/domain-content-validator-chrome-extension/issues)
+- **Security or privacy reports:** see [SECURITY.md](SECURITY.md) — do not open a public issue
 - **Store listing contact:** montageapplication@gmail.com
 - **Privacy policy:** https://www.timemotionstudy.com/private-policy
 
@@ -378,4 +479,21 @@ External contributions are not being accepted — this is a proprietary codebase
 
 Copyright © 2023–2026 Christopher G. Benavides. All rights reserved.
 
-This source is published for visibility and collaboration. It is **not** open source: no license to use, copy, modify, or distribute this code is granted. See [LICENSE](LICENSE) for the full terms.
+This source is published for visibility and collaboration. It is **not** open
+source: no license to use, copy, modify, or distribute this code is granted. See
+[LICENSE](LICENSE) for the full terms.
+
+---
+
+## Further reading
+
+| Document | What is in it |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module responsibilities, lifecycle, message flow |
+| [docs/DETECTION.md](docs/DETECTION.md) | The heuristic line by line, and how it fails |
+| [docs/RELEASING.md](docs/RELEASING.md) | Packaging and store submission runbook |
+| [docs/STORE_LISTING.md](docs/STORE_LISTING.md) | Canonical copy of the store listing |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to work in this repository |
+| [PRIVACY.md](PRIVACY.md) | Data handling commitments |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |

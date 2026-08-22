@@ -1,37 +1,31 @@
 {
-  "manifest_version": 3,
   "name": "Domain-Content Validator",
+  "description": "Protect yourself from email scams! Download the DCV Chrome extension to detect and alert on suspicious emails. Stay safe!",
   "version": "0.0.1",
-  "description": "Compares sender domain information with message content to detect phishing and fraudulent email, with real-time alerts.",
-  "minimum_chrome_version": "102",
+  "manifest_version": 3,
   "action": {
+    "default_popup": "./popup/index.html",
     "default_title": "Domain-Content Validator",
-    "default_popup": "src/popup/popup.html"
+    "default_icon": {
+      "16": "./assets/logo1.png",
+      "32": "./assets/logo1.png",
+      "64": "./assets/logo1.png",
+      "128": "./assets/logo1.png"
+    }
+  },
+  "icons": {
+    "16": "./assets/logo1.png",
+    "32": "./assets/logo1.png",
+    "64": "./assets/logo1.png",
+    "128": "./assets/logo1.png"
   },
   "background": {
-    "service_worker": "src/background/service-worker.js",
-    "type": "module"
+    "service_worker": "background.js",
+    "matches": ["<all_urls>"]
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://mail.google.com/*",
-        "https://outlook.live.com/*",
-        "https://outlook.office.com/*",
-        "https://outlook.office365.com/*",
-        "https://mail.yahoo.com/*"
-      ],
-      "js": ["src/content/content-script.js"],
-      "run_at": "document_idle",
-      "all_frames": false
-    }
-  ],
-  "permissions": ["storage", "activeTab"],
-  "host_permissions": [
-    "https://mail.google.com/*",
-    "https://outlook.live.com/*",
-    "https://outlook.office.com/*",
-    "https://outlook.office365.com/*",
-    "https://mail.yahoo.com/*"
-  ]
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }],
+  "permissions": ["tabs","storage"]
 }

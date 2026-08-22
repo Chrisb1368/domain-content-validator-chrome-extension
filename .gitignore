@@ -1,0 +1,34 @@
+# Build output / packaged extension
+*.zip
+*.crx
+*.pem
+dist/
+build/
+release/
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment & secrets
+.env
+.env.*
+*.key
+credentials.json
+
+# Editor & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & coverage
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/

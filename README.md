@@ -64,7 +64,7 @@ Everything runs in the browser. No email content is stored or sent anywhere.
 | **Languages** | English (United States) |
 | **Package size** | ~1.48 MiB |
 | **Rating** | 5.0 ★ |
-| **Privacy policy** | https://www.timemotionstudy.com/private-policy |
+| **Privacy policy** | None published — [PRIVACY.md](PRIVACY.md) is the statement of record |
 
 ---
 
@@ -395,6 +395,7 @@ and each one is a concrete task rather than a vague "improve detection".
 - [ ] Additional clients: Outlook Web, Yahoo Mail, Proton Mail
 - [ ] Options page: sensitivity, per-domain allowlist, enable/disable
 - [ ] Extract detection into a pure module with unit tests
+- [ ] Publish a privacy policy page and correct the URL on the store listing
 - [ ] Localization beyond en-US
 
 ---
@@ -413,8 +414,8 @@ and each one is a concrete task rather than a vague "improve detection".
 - **No analytics, telemetry, or crash reporting.**
 
 The full policy, including the changes that would require re-declaring data
-practices on the store, is in [PRIVACY.md](PRIVACY.md). The published policy
-lives at https://www.timemotionstudy.com/private-policy.
+practices on the store, is in [PRIVACY.md](PRIVACY.md), which is the statement of
+record for this extension. No separate privacy policy page is published.
 
 ---
 
@@ -458,7 +459,7 @@ Full detail in [CHANGELOG.md](CHANGELOG.md).
 - **Bugs and feature requests:** open an [issue](https://github.com/Chrisb1368/domain-content-validator-chrome-extension/issues)
 - **Security or privacy reports:** see [SECURITY.md](SECURITY.md) — do not open a public issue
 - **Store listing contact:** montageapplication@gmail.com
-- **Privacy policy:** https://www.timemotionstudy.com/private-policy
+- **Data handling:** see [PRIVACY.md](PRIVACY.md)
 
 ---
 

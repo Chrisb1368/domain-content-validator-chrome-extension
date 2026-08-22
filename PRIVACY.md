@@ -5,7 +5,7 @@ requirement, not a nice-to-have. The Chrome Web Store listing declares that the
 extension **does not collect user data**, and this document records what that
 commitment means in the code as shipped.
 
-- **Published privacy policy:** https://www.timemotionstudy.com/private-policy
+- **Policy of record:** this document. No separate privacy policy page is published.
 - **Store disclosure:** "The developer has disclosed that it will not collect or use your data."
 
 ---
@@ -84,8 +84,7 @@ the [roadmap](README.md#roadmap) and is the right fix.
 ## Changes that require sign-off before merging
 
 Each of the following changes the extension's privacy posture and requires
-updating both the store's data-safety declarations and the published privacy
-policy:
+updating this document and the store's data-safety declarations:
 
 - Adding `fetch`, `XMLHttpRequest`, `WebSocket`, or `sendBeacon`
 - Adding a remote script, stylesheet, font, or image

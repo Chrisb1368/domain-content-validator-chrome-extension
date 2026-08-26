@@ -170,7 +170,7 @@ Then in Chrome:
    `manifest.json`.
 4. Pin the extension so the popup is one click away.
 
-> **⚠️ Before this loads, add `assets/logo1.png`.** `manifest.json` references it
+> **⚠️ Do not delete `assets/logo1.png`.** `manifest.json` references it
 > for every icon size, and Chrome refuses to load an unpacked extension whose
 > icon files are missing. See [assets/README.md](assets/README.md).
 
@@ -188,7 +188,7 @@ domain-content-validator-chrome-extension/
 │   ├── script.js           # Reads the stored verdict, renders the card
 │   └── style.css           # Popup styling (300px wide)
 ├── assets/
-│   └── logo1.png           # Extension icon — REQUIRED, not yet committed
+│   └── logo1.png           # Extension icon — required by manifest.json
 ├── docs/
 │   ├── ARCHITECTURE.md     # Module responsibilities and message flow
 │   ├── DETECTION.md        # The heuristic, line by line, with its limits
@@ -361,28 +361,26 @@ and each one is a concrete task rather than a vague "improve detection".
    review friction and the permission warning users see at install.
 9. **`background.matches` is not a valid key.** MV3 ignores it; it should be
    removed.
-10. **`assets/logo1.png` is not in the repository.** It must be added before the
-    extension can be loaded or packaged.
 
 **UI**
 
-11. **`alert()` blocks the page**, cannot be styled, and is easy to dismiss
+10. **`alert()` blocks the page**, cannot be styled, and is easy to dismiss
     reflexively. An injected inline banner would be both safer and clearer.
-12. **Leftover boilerplate in the popup.** `popup/index.html` still carries
+11. **Leftover boilerplate in the popup.** `popup/index.html` still carries
     `<title>Controller Mapper</title>` and a "Map keyboard/mouse keys to the
     controller" meta description from another project.
-13. **A remote font is loaded.** The popup links Google Fonts, which makes a
+12. **A remote font is loaded.** The popup links Google Fonts, which makes a
     network request to `fonts.googleapis.com` whenever it opens. Self-host or
     drop it — the extension advertises that it collects no data, and an outbound
     request undercuts that claim even though no message content is involved.
-14. **Dead code.** `popup/script.js` still contains `getTabURL()` and a copy of
+13. **Dead code.** `popup/script.js` still contains `getTabURL()` and a copy of
     `validate()` that run against the popup's own DOM and can never succeed.
 
 ---
 
 ## Roadmap
 
-- [ ] Add `assets/logo1.png` so the repository is loadable and packageable
+- [x] Add `assets/logo1.png` so the repository is loadable and packageable
 - [ ] Narrow `content_scripts.matches` to `https://mail.google.com/*`
 - [ ] Remove the invalid `background.matches` key and the dead popup code
 - [ ] Fix the popup title and meta description

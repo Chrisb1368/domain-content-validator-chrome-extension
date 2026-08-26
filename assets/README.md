@@ -1,6 +1,6 @@
 # assets
 
-## `logo1.png` — required, not yet committed
+## `logo1.png` — required, committed
 
 `manifest.json` references `./assets/logo1.png` for every icon size:
 
@@ -10,9 +10,10 @@
 ```
 
 Chrome refuses to load an unpacked extension whose icon files are missing, so
-**this file must be added before the repository can be loaded or packaged.**
-Copy it from the published 0.0.1 package rather than recreating it — a different
-icon would change the store listing's appearance on the next upload.
+**this file must stay in the repository for it to load or package.**
+If it ever needs replacing, copy it from the published 0.0.1 package rather
+than recreating it: a different icon would change how the store listing looks
+on the next upload.
 
 ## Improving the icon setup
 
